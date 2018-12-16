@@ -17,10 +17,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/546669204/RebateBot/common"
+	"github.com/hmpz2004/RebateBot/common"
 	"github.com/fsnotify/fsnotify"
 	"github.com/tidwall/gjson"
+
+	utils "github.com/hmpz2004/RebateBot/utils"
 )
+
+const TAG = "main/master.go"
 
 var methods = map[string]interface{}{
 	"init":       ServiceInit,
@@ -129,7 +133,7 @@ func main() {
 	//time.Sleep(time.Second * 1e4)
 
 	// 监听
-	l, err := net.Listen("tcp", ":188")
+	l, err := net.Listen("tcp", ":3288")
 	if err != nil {
 		fmt.Println("Error listening:", err)
 		os.Exit(1)
@@ -181,6 +185,7 @@ func handleRequest(conn net.Conn) {
 					if string(reader) == "HeartBoom" {
 						overtime.Reset(20 * time.Second)
 					} else {
+						utils.LogDebug(TAG, "received : " + string(reader))
 						log.Println(fmt.Sprintf(`%s ==> %s %s`, ConnToName[conn.RemoteAddr().String()], "Master", string(reader)))
 						go ServiceProcess(reader, conn)
 					}
@@ -202,21 +207,28 @@ func handleRequest(conn net.Conn) {
 
 //ServiceProcess 服务请求处理
 func ServiceProcess(str []byte, conn net.Conn) {
+	utils.LogDebug(TAG, "in ServiceProcess()")
 	if !gjson.Valid(string(str)) {
 		//log.Println(`非json数据：`, string(str))
+		utils.LogDebug(TAG, "not json data and return")
 		return
 	}
 	var resp common.Msg
 	err := json.Unmarshal(str, &resp)
 	if err != nil {
 		log.Println(err)
+		utils.LogDebug(TAG, "json.Unmarshal failed and return")
 		return
 	}
+	//<<>>
+	utils.LogDebug(TAG, "resp.Method " + resp.Method)
 	if _, ok := Config.Routing[resp.Method]; !ok {
 		log.Println("请求方法不存在请检查路由表", resp.Method)
 		return
 	}
 	r := Config.Routing[resp.Method]
+	//<<>>
+	utils.LogDebug(TAG, "r " + r)
 
 	if b := strings.Index(r, "."); b != -1 {
 		s := r[:b]
@@ -240,6 +252,8 @@ func ServiceProcess(str []byte, conn net.Conn) {
 	ForEnd:
 
 		runid, _ := strconv.Atoi(resp.To)
+		//<<>>
+		// utils.LogDebug(TAG, "runid " + string(runid))
 		if runid > 1 {
 			s += "|" + resp.To
 		}
@@ -285,6 +299,7 @@ func ServiceProcess(str []byte, conn net.Conn) {
 
 //ServiceInit 服务注册调用
 func ServiceInit(data common.Msg, conn net.Conn) {
+	utils.LogDebug(TAG, "in ServiceInit()")
 	connname := data.Data
 	if strings.Index(connname, "|") == -1 {
 		for {
@@ -376,6 +391,15 @@ func RunAllService() {
 //ConnWrite Socket写函数
 func ConnWrite(data common.Msg, conn net.Conn) {
 	b, _ := json.Marshal(data)
+
+	//<<>>
+	// tmpB := []byte("testResponseContent")
+	// conn.Write(tmpB)
+	// utils.LogDebug(TAG, "write test done")
+
+	//<<>>
+	utils.LogDebug(TAG, "conn write : " + string(b))
+
 	log.Println(fmt.Sprintf(`%s ==> %s %s`, "Master", ConnToName[conn.RemoteAddr().String()], string(b)))
 	conn.Write(common.Packet(b))
 }

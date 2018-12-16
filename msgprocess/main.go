@@ -21,16 +21,21 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	// "runtime/debug"
 
 	"upper.io/db.v3"
 	"upper.io/db.v3/lib/sqlbuilder"
 	"upper.io/db.v3/mysql"
 
-	"github.com/546669204/RebateBot/common"
+	"github.com/hmpz2004/RebateBot/common"
 	httpdo "github.com/546669204/golang-http-do"
 	"github.com/fsnotify/fsnotify"
 	"github.com/tidwall/gjson"
+
+	utils "github.com/hmpz2004/RebateBot/utils"
 )
+
+const TAG = "msgprocess/main/main.go"
 
 var methods = map[string]interface{}{
 	"ExitHook":    ExitHook,
@@ -140,6 +145,9 @@ func ExitHook() {
 	//退出程序钩子
 }
 func msgprocess(data common.Msg) {
+
+	utils.LogDebug(TAG, "in msgprocess()")
+
 	b := gjson.Parse(data.Data)
 
 	if b.Get("type").String() == "text" {
@@ -239,11 +247,13 @@ func msgprocess(data common.Msg) {
 	}
 }
 func tktuiguang(s, weid string) (string, string) {
+	utils.LogDebug(TAG, "in tktuiguang()")
 	var data common.Msg
 	data.Data = fmt.Sprintf(`{"keyword":"%s"}`, s)
 	data.Method = "tbsearch"
 	p := Client.ConnWriteReturn(data)
 	if gjson.Parse(p.Data).Get("status").Int() != 1 {
+		utils.LogDebug(TAG, "in tktuiguang() return 商品没有返利_1")
 		return `这个商品暂时没有返利哦`, ""
 	}
 	pro := gjson.Parse(p.Data).Get("products")
@@ -281,6 +291,7 @@ func tktuiguang(s, weid string) (string, string) {
 	data.Method = "settuiguang"
 	l := Client.ConnWriteReturn(data)
 	if gjson.Parse(l.Data).Get("status").Int() != 1 {
+		utils.LogDebug(TAG, "in tktuiguang() return 商品没有返利_2")
 		return `这个商品暂时没有返利哦`, ""
 	}
 	link := gjson.Parse(l.Data).Get("link")
@@ -377,6 +388,9 @@ func GetOriginalUrl(s string) string {
 }
 
 func tklParse(str string) string {
+
+	utils.LogDebug(TAG, "in tklParse()")
+
 	op := httpdo.Default()
 	op.Url = "http://api.chaozhi.hk/tb/tklParse"
 	op.Method = "POST"

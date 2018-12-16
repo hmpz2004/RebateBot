@@ -10,7 +10,11 @@ import (
 	"time"
 
 	"github.com/tidwall/gjson"
+
+	utils "github.com/hmpz2004/RebateBot/utils"
 )
+
+const TAG_CLIENT = "common/client.go"
 
 var ServiceName = GetServiceName(os.Args[0])
 
@@ -36,7 +40,7 @@ func (self *ConnInsID) Get() int64 {
 var CID ConnInsID
 
 func InitClient() *Client {
-	conn, err := net.Dial("tcp", ":188")
+	conn, err := net.Dial("tcp", ":3288")
 	if err != nil {
 		fmt.Println("Error connecting:", err)
 		os.Exit(1)
@@ -109,6 +113,9 @@ func (this *Client) ServiceProcess(str []byte) {
 }
 
 func (this *Client) ServiceHandle(conn net.Conn) {
+
+	utils.LogDebug(TAG_CLIENT, "in ServiceHandle()")
+
 	go this.ServiceWriteHandle(conn)
 	tmpBuffer := make([]byte, 0)
 	buffer := make([]byte, 1024)

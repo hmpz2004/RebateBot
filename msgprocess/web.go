@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/546669204/RebateBot/common"
+	"github.com/hmpz2004/RebateBot/common"
 
 	"github.com/gin-gonic/gin"
 )

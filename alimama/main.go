@@ -14,9 +14,9 @@ import (
 
 	"github.com/extrame/xls"
 
-	"github.com/546669204/RebateBot/common"
+	"github.com/hmpz2004/RebateBot/common"
 	httpdo "github.com/546669204/golang-http-do"
-	tk "github.com/546669204/taobaoke"
+	tk "github.com/hmpz2004/taobaoke"
 	"github.com/tidwall/gjson"
 )
 
